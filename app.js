@@ -96,24 +96,37 @@
     if (cv && coin && coin.data) { const p = (coin.data.positions || []).find(p => !p.closed_at); drawChart(cv, coin.data.prices, {base: p && p.entry_price, exitLine: p && p.stop_price}); }
     else if (cv) drawChart(cv, CH && CH.points, {base: S.start});
   }
+  function doPair(raw) {
+    raw = (raw || '').trim();
+    try {
+      const u = new URL(raw, location.origin);
+      const q = new URLSearchParams(u.search); const h = new URLSearchParams(u.hash.replace(/^#/, ''));
+      let tt = q.get('t') || h.get('t'); let dd = q.get('d') || h.get('d');
+      // also accept bare token&path pasted as t=...&d=...
+      if ((!tt || !dd) && raw.includes('t=') && raw.includes('d=')) {
+        const fake = new URLSearchParams(raw.replace(/^.*\?/, '').replace(/^#/, ''));
+        tt = tt || fake.get('t'); dd = dd || fake.get('d');
+      }
+      if (!tt || !dd) { alert('Falta t= o d= en el enlace'); return; }
+      localStorage.setItem('desk_t', tt); localStorage.setItem('desk_d', dd);
+      location.replace(location.pathname + '?t=' + encodeURIComponent(tt) + '&d=' + encodeURIComponent(dd));
+    } catch (e) { alert('Pega la URL completa del desk'); }
+  }
   document.addEventListener('click', e => {
+    if (e.target && (e.target.id === 'pairGo' || (e.target.closest && e.target.closest('#pairGo')))) {
+      e.preventDefault();
+      doPair($('#pair') && $('#pair').value);
+      return;
+    }
     const t = e.target.closest('[data-tab],[data-coin],.back,#retry,#logout'); if (!t) return;
     if (t.dataset.tab) { tab = t.dataset.tab; coin = null; document.querySelectorAll('nav button').forEach(x => x.classList.toggle('on', x === t)); scrollTo(0, 0); render(); }
     else if (t.dataset.coin) { coin = {mint: t.dataset.coin, data: null}; scrollTo(0, 0); render(); get('coin/' + coin.mint + '.json').then(d => { if (coin) { coin.data = d || {coin: {mint: coin.mint}}; render(); } }).catch(() => {}); }
     else if (t.classList.contains('back')) { coin = null; render(); }
     else if (t.id === 'retry') poll();
-    else if (t.id === 'logout') { localStorage.clear(); location.reload(); }
-    else if (t.id === 'pairGo') {
-      const raw = ($('#pair') && $('#pair').value || '').trim();
-      try {
-        const u = new URL(raw, location.origin);
-        const q = new URLSearchParams(u.search); const h = new URLSearchParams(u.hash.replace(/^#/, ''));
-        const tt = q.get('t') || h.get('t'); const dd = q.get('d') || h.get('d');
-        if (!tt || !dd) { alert('That link is missing t= or d='); return; }
-        localStorage.setItem('desk_t', tt); localStorage.setItem('desk_d', dd);
-        location.replace(location.pathname + '?t=' + encodeURIComponent(tt) + '&d=' + encodeURIComponent(dd));
-      } catch (e) { alert('Paste the full desk URL'); }
-    }
+    else if (t.id === 'logout') { localStorage.clear(); location.replace(location.pathname); }
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target && e.target.id === 'pair') { e.preventDefault(); doPair(e.target.value); }
   });
   addEventListener('resize', render); render(); if (T && D) { poll(); setInterval(poll, 15000); }
 })();
