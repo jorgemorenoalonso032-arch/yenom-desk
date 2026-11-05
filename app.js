@@ -2,10 +2,19 @@
    FOMO links: ONLY the coin_url / profile_url / signup_url fields that the server builds with links.py. Never built here. */
 (() => {
   const $ = s => document.querySelector(s), V = $('#view');
-  const h = location.hash.slice(1); const hp = new URLSearchParams(h);
-  if (hp.get('t')) localStorage.setItem('desk_t', hp.get('t')); if (hp.get('d')) localStorage.setItem('desk_d', hp.get('d'));
-  if (hp.get('t') || hp.get('d')) history.replaceState(null, '', location.pathname + location.search);
-  const T = localStorage.getItem('desk_t'), D = localStorage.getItem('desk_d');
+  // iOS Home Screen drops #hash and often uses a separate store — prefer ?t=&d= and keep them in the URL.
+  const qp = new URLSearchParams(location.search);
+  const hp = new URLSearchParams(location.hash.replace(/^#/, ''));
+  const tIn = qp.get('t') || hp.get('t');
+  const dIn = qp.get('d') || hp.get('d');
+  if (tIn) localStorage.setItem('desk_t', tIn);
+  if (dIn) localStorage.setItem('desk_d', dIn);
+  let T = localStorage.getItem('desk_t'), D = localStorage.getItem('desk_d');
+  // Keep credentials in the query so Add to Home Screen reopens already paired.
+  if (T && D) {
+    const want = '?t=' + encodeURIComponent(T) + '&d=' + encodeURIComponent(D);
+    if (location.search !== want || location.hash) history.replaceState(null, '', location.pathname + want);
+  }
   const BASE = (window.DESK_DATA_BASE || 'd/') + D + '/';
   let S = null, CH = null, ACT = null, tab = 'home', coin = null, err = null, key = null;
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -71,7 +80,14 @@
       ${v ? `<div class="h">Analyst</div><div class="card">${['alive_6h', 'organic', 'flush', 'chase'].map(k => `<div class="kv"><span>${k}</span><span>${v[k] == null ? '—' : (+v[k]).toFixed(2)}</span></div>`).join('')}<div class="kv"><span>Score</span><span class="${v.pass ? 'up' : 'dn'}">${v.score}</span></div></div>` : ''}`;
   }
   function render() {
-    if (!T || !D) { V.innerHTML = '<div class="state">Open the private link from Telegram to pair this device.</div>'; return; }
+    if (!T || !D) {
+      V.innerHTML = `<div class="state" style="text-align:left;padding:24px">
+        <div style="font-size:17px;font-weight:600;margin-bottom:8px">Pair this device</div>
+        <div class="dim" style="margin-bottom:12px">iPhone home-screen icons drop the # part of the link. Paste the full private URL below (or open the ?t=…&d=… link in Safari, then Add to Home Screen again).</div>
+        <input id="pair" type="url" placeholder="https://…github.io/yenom-desk/?t=…&d=…" style="width:100%;box-sizing:border-box;padding:12px;border-radius:12px;border:0;background:#2c2c2e;color:#fff;margin-bottom:12px"/>
+        <button class="btn" id="pairGo">Pair</button></div>`;
+      return;
+    }
     if (!S) { V.innerHTML = err ? `<div class="state err">${esc(err)}</div><button class="btn sec" id="retry">Retry</button>` : '<div class="state">Loading…</div>'; return; }
     const b = $('#badge'); b.textContent = S.mode; b.className = 'badge' + (S.mode === 'LIVE' ? ' live' : '');
     $('#title').textContent = coin ? 'Coin' : tab[0].toUpperCase() + tab.slice(1);
@@ -87,6 +103,17 @@
     else if (t.classList.contains('back')) { coin = null; render(); }
     else if (t.id === 'retry') poll();
     else if (t.id === 'logout') { localStorage.clear(); location.reload(); }
+    else if (t.id === 'pairGo') {
+      const raw = ($('#pair') && $('#pair').value || '').trim();
+      try {
+        const u = new URL(raw, location.origin);
+        const q = new URLSearchParams(u.search); const h = new URLSearchParams(u.hash.replace(/^#/, ''));
+        const tt = q.get('t') || h.get('t'); const dd = q.get('d') || h.get('d');
+        if (!tt || !dd) { alert('That link is missing t= or d='); return; }
+        localStorage.setItem('desk_t', tt); localStorage.setItem('desk_d', dd);
+        location.replace(location.pathname + '?t=' + encodeURIComponent(tt) + '&d=' + encodeURIComponent(dd));
+      } catch (e) { alert('Paste the full desk URL'); }
+    }
   });
   addEventListener('resize', render); render(); if (T && D) { poll(); setInterval(poll, 15000); }
 })();
