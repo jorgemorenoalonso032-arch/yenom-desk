@@ -18,7 +18,8 @@ canvas.chart{width:100%;height:190px;display:block;margin-top:10px}
 .carousel{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 -16px;padding:2px 16px;scrollbar-width:none}.carousel::-webkit-scrollbar{display:none}
 .agent{flex:0 0 140px;scroll-snap-align:start;background:var(--card);border-radius:14px;padding:12px}
 .agent .n{font-weight:600}.agent .s{color:var(--dim);font-size:13px;margin-top:4px}
-.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--dim);margin-right:6px}.dot.ok{background:var(--green)}.dot.late{background:var(--orange)}.dot.dead{background:var(--red)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--dim);margin-right:6px}.dot.ok{background:var(--green)}.dot.late{background:var(--orange)}.dot.dead{background:var(--red)}.dot.stale{background:transparent;box-shadow:inset 0 0 0 2px var(--orange)}
+.healthline{color:var(--dim);font-size:13px;white-space:normal;margin-top:2px}
 .row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:.5px solid var(--sep)}.row:last-child{border:0}
 .row .main{flex:1;min-width:0}.row .t{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.row .st{color:var(--dim);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .row .v{font:600 14px var(--font);font-variant-numeric:tabular-nums;text-align:right}
@@ -30,4 +31,4 @@ canvas.chart{width:100%;height:190px;display:block;margin-top:10px}
 .pill{font:700 11px var(--font);padding:2px 8px;border-radius:10px}.pill.g{background:rgba(0,211,90,.18);color:var(--green)}.pill.r{background:rgba(255,69,58,.18);color:var(--red)}
 .kv{display:flex;justify-content:space-between;padding:9px 0;border-bottom:.5px solid var(--sep)}.kv:last-child{border:0}.kv span:last-child{color:var(--dim);font-family:var(--mono);font-size:13px}
 .back{color:var(--cyan);background:none;border:0;font:17px var(--font);padding:8px 0}
-.note{color:var(--dim);font-size:13px;padding:4px}
+.note{color:var(--dim);font-size:13px;padding:4px}.note.dn{color:var(--red)}.note.or{color:var(--orange)}
